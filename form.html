@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>活動報名表</title>
+<style>
+body{background:linear-gradient(to bottom,#ffecd2,#fcb69f);font-family:Arial;padding:30px;}
+.container{max-width:500px;margin:auto;background:rgba(255,255,255,0.95);padding:25px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.2);}
+h2{text-align:center;}
+form{display:flex;flex-direction:column;transition:opacity 0.8s ease;}
+label{margin-top:10px;font-weight:bold;}
+input,textarea{margin-top:5px;padding:8px;border-radius:5px;border:1px solid #ccc;width:100%;box-sizing:border-box;}
+.radio-group,.checkbox-group{margin-top:5px;padding-left:5px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+.radio-group label,.checkbox-group label{display:flex;align-items:center;gap:5px;font-weight:normal;}
+.checkbox-group input[type=text]{width:auto;}
+button{margin-top:20px;padding:10px;border:none;border-radius:5px;background:#ff7f50;color:white;font-size:16px;cursor:pointer;}
+.success{display:none;text-align:center;font-size:20px;color:white;background:#4caf50;padding:25px;border-radius:10px;animation:fadeIn 1s ease forwards;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>活動報名表</h2>
+<form id="form">
+<label>姓名</label><input id="name" placeholder="請輸入姓名">
+<label>Email</label><input id="email" type="email" placeholder="請輸入Email">
+<label>手機號碼</label><input id="phone" type="text" placeholder="請輸入手機號碼">
+<label>生日</label><input id="birthday" type="date">
+<label>性別</label>
+<div class="radio-group">
+<label><input type="radio" name="gender" value="男" checked>男</label>
+<label><input type="radio" name="gender" value="女">女</label>
+</div>
+<label>興趣</label>
+<div class="checkbox-group">
+<label><input type="checkbox" value="動漫">動漫</label>
+<label><input type="checkbox" value="遊戲">遊戲</label>
+<label><input type="checkbox" value="運動">運動</label>
+<label><input type="checkbox" value="音樂">音樂</label>
+<label><input type="checkbox" id="otherCheck">其他</label>
+<input id="otherText" placeholder="請填寫其他">
+</div>
+<label>報名理由</label><textarea id="reason"></textarea>
+<label>備註</label><textarea id="note" placeholder="其他想補充的內容"></textarea>
+<button type="button" onclick="submitForm()">送出</button>
+</form>
+<div class="success" id="success">🎉 報名成功！<br>我們已收到你的資料</div>
+</div>
+
+<script>
+const API_URL="https://script.google.com/macros/s/AKfycbwMTmYR-KRODrEJtltZekqKM5rpZNlYCeJ3kMhMjpyCWI3hWlS0BHkLexf0zQWO6_lROQ/exec";
+
+function submitForm(){
+  const interests=[];
+  document.querySelectorAll('.checkbox-group input[type=checkbox]').forEach(c=>{
+    if(c.checked && c.id!=='otherCheck') interests.push(c.value);
+  });
+  if(document.getElementById('otherCheck').checked) interests.push(document.getElementById('otherText').value);
+
+  const data={
+    name: document.getElementById("name").value || '',
+    email: document.getElementById("email").value || '',
+    phone: document.getElementById("phone").value || '',
+    birthday: document.getElementById("birthday").value || '',
+    gender: document.querySelector('input[name="gender"]:checked')?.value || '',
+    interests: interests.join(", "),
+    reason: document.getElementById("reason").value || '',
+    note: document.getElementById("note").value || ''
+  };
+
+  fetch(API_URL,{method:"POST",body:JSON.stringify(data)})
+  .then(()=>{ 
+    document.getElementById("form").style.opacity=0;
+    setTimeout(()=>{
+      document.getElementById("form").style.display="none";
+      document.getElementById("success").style.display="block";
+    },800);
+    document.getElementById("form").reset();
+  });
+}
+</script>
+</body>
+</html>

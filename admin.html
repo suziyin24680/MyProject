@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>後台資料管理</title>
+<style>
+body{
+  background:linear-gradient(to bottom,#ffecd2,#fcb69f);
+  font-family:Arial;
+  padding:30px;
+}
+h2{text-align:center;}
+.table-container{
+  max-width:1100px;
+  margin:auto;
+  background:rgba(255,255,255,0.95);
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 4px 8px rgba(0,0,0,0.2);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  text-align:center;
+}
+th,td{
+  border:1px solid #ccc;
+  padding:6px;
+  font-size:14px;
+}
+th{
+  background:#ff7f50;
+  color:white;
+}
+input{
+  width:95%;
+  padding:4px;
+  box-sizing:border-box;
+}
+button{
+  padding:5px 10px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+.update-btn{background:#4CAF50;color:white;}
+.delete-btn{background:#f44336;color:white;}
+.radio-group{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+#error {
+  color:red;
+  text-align:center;
+  margin-top:10px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="table-container">
+<h2>後台資料管理</h2>
+<div id="error"></div>
+<table id="dataTable">
+<tr>
+  <th>姓名</th>
+  <th>Email</th>
+  <th>手機</th>
+  <th>生日</th>
+  <th>性別</th>
+  <th>興趣</th>
+  <th>報名理由</th>
+  <th>備註</th>
+  <th>操作</th>
+</tr>
+</table>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwMTmYR-KRODrEJtltZekqKM5rpZNlYCeJ3kMhMjpyCWI3hWlS0BHkLexf0zQWO6_lROQ/exec";
+
+function showError(msg){
+  document.getElementById("error").innerText = msg;
+}
+
+function loadData(){
+  fetch(API_URL)
+    .then(res => {
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(data => {
+      const table = document.getElementById("dataTable");
+      table.innerHTML = `
+      <tr>
+        <th>姓名</th><th>Email</th><th>手機</th><th>生日</th>
+        <th>性別</th><th>興趣</th><th>報名理由</th><th>備註</th><th>操作</th>
+      </tr>`;
+
+      data.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+<td><input id="name${r.row}" value="${r.name}"></td>
+<td><input id="email${r.row}" value="${r.email}"></td>
+<td><input id="phone${r.row}" value="${r.phone}"></td>
+<td><input type="date" id="birthday${r.row}" value="${r.birthday}"></td>
+<td class="radio-group">
+  <label><input type="radio" name="gender${r.row}" value="男" ${r.gender==="男"?"checked":""}>男</label>
+  <label><input type="radio" name="gender${r.row}" value="女" ${r.gender==="女"?"checked":""}>女</label>
+</td>
+<td><input id="interests${r.row}" value="${r.interests}"></td>
+<td><input id="reason${r.row}" value="${r.reason}"></td>
+<td><input id="note${r.row}" value="${r.note}"></td>
+<td>
+  <button class="update-btn" onclick="updateRow(${r.row})">修改</button>
+  <button class="delete-btn" onclick="deleteRow(${r.row})">刪除</button>
+</td>`;
+        table.appendChild(tr);
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      showError("後台載入失敗：" + err.message + "（請確認 Apps Script 已重新部署並開放）");
+    });
+}
+
+function updateRow(row){
+  const data = {
+    row: row,
+    name: document.getElementById("name"+row).value || '',
+    email: document.getElementById("email"+row).value || '',
+    phone: document.getElementById("phone"+row).value || '',
+    birthday: document.getElementById("birthday"+row).value || '',
+    gender: document.querySelector(`input[name="gender${row}"]:checked`)?.value || '',
+    interests: document.getElementById("interests"+row).value || '',
+    reason: document.getElementById("reason"+row).value || '',
+    note: document.getElementById("note"+row).value || ''
+  };
+
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify(data)
+  }).then(()=>{
+    alert("修改成功");
+    loadData();
+  });
+}
+
+function deleteRow(row){
+  if(!confirm("確定要刪除？")) return;
+
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({deleteRow:row})
+  }).then(()=>{
+    alert("刪除成功");
+    loadData();
+  });
+}
+
+loadData();
+</script>
+
+</body>
+</html>
